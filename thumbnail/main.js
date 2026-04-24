@@ -105,8 +105,8 @@ dropZone.addEventListener('drop', (e) => {
 function createStyledText(content, color) {
     return new fabric.IText(content, {
         left: canvas.width / 2,
-        top: canvas.height * 0.7, // Lower half like samples
-        fontFamily: 'Outfit',
+        top: canvas.height * 0.7,
+        fontFamily: 'Montserrat',
         fontSize: 100,
         fill: color,
         fontWeight: '900',
@@ -147,7 +147,7 @@ addHighlightBtn.addEventListener('click', () => {
 bringForwardBtn.addEventListener('click', () => {
     const activeObject = canvas.getActiveObject();
     if (activeObject) {
-        activeObject.bringToFront();
+        canvas.bringToFront(activeObject);
         canvas.renderAll();
     }
 });
@@ -155,10 +155,14 @@ bringForwardBtn.addEventListener('click', () => {
 sendBackwardsBtn.addEventListener('click', () => {
     const activeObject = canvas.getActiveObject();
     if (activeObject) {
-        activeObject.sendToBack();
-        // Keep background at the very back
+        // Move to bottom but keep above background
         const background = canvas.getObjects('image').find(obj => obj.isBackground);
-        if (background) background.sendToBack();
+        if (background) {
+            const bgIndex = canvas.getObjects().indexOf(background);
+            canvas.moveTo(activeObject, bgIndex + 1);
+        } else {
+            canvas.sendToBack(activeObject);
+        }
         canvas.renderAll();
     }
 });
