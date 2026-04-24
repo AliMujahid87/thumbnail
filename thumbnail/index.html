@@ -33,6 +33,10 @@
                     <button id="add-text" class="btn-secondary">White Text</button>
                     <button id="add-highlight-text" class="btn-secondary highlight-btn">Maroon Text</button>
                 </div>
+                <div class="grid-2">
+                    <button id="bring-forward" class="btn-ghost">Bring to Front</button>
+                    <button id="send-backwards" class="btn-ghost">Send to Back</button>
+                </div>
                 
                 <div id="text-edit-controls" class="sub-controls hidden">
                     <div class="input-wrapper">
@@ -79,12 +83,14 @@
 
             <div class="control-group">
                 <h3><span class="icon">📐</span> Canvas Size</h3>
-                <select id="canvas-preset">
-                    <option value="1080x1920">Vertical Shorts (1080x1920)</option>
-                    <option value="1280x720" selected>YouTube Thumbnail (1280x720)</option>
-                    <option value="1920x1080">Full HD (1920x1080)</option>
-                    <option value="1080x1080">Instagram Square (1080x1080)</option>
-                </select>
+                <div class="input-wrapper">
+                    <select id="canvas-preset">
+                        <option value="1080x1920" selected>Vertical Shorts (1080x1920)</option>
+                        <option value="1280x720">YouTube Thumbnail (1280x720)</option>
+                        <option value="1920x1080">Full HD (1920x1080)</option>
+                        <option value="1080x1080">Instagram Square (1080x1080)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="actions">

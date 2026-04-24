@@ -11,6 +11,8 @@ const imageUpload = document.getElementById('image-upload');
 const dropZone = document.getElementById('drop-zone');
 const addTextBtn = document.getElementById('add-text');
 const addHighlightBtn = document.getElementById('add-highlight-text');
+const bringForwardBtn = document.getElementById('bring-forward');
+const sendBackwardsBtn = document.getElementById('send-backwards');
 const textControls = document.getElementById('text-edit-controls');
 const textInput = document.getElementById('text-input');
 const fontSizeInput = document.getElementById('font-size');
@@ -117,7 +119,13 @@ function createStyledText(content, color) {
         transparentCorners: false,
         textAlign: 'center',
         charSpacing: -20,
-        lineHeight: 1
+        lineHeight: 1,
+        shadow: new fabric.Shadow({
+            color: 'rgba(0,0,0,0.5)',
+            blur: 15,
+            offsetX: 5,
+            offsetY: 5
+        })
     });
 }
 
@@ -129,10 +137,30 @@ addTextBtn.addEventListener('click', () => {
 });
 
 addHighlightBtn.addEventListener('click', () => {
-    const text = createStyledText('HIGHLIGHT', '#8b1d3d');
+    const text = createStyledText('HIGHLIGHT', '#9b1b30');
     canvas.add(text);
     canvas.setActiveObject(text);
     canvas.renderAll();
+});
+
+// Layering
+bringForwardBtn.addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+        activeObject.bringToFront();
+        canvas.renderAll();
+    }
+});
+
+sendBackwardsBtn.addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+        activeObject.sendToBack();
+        // Keep background at the very back
+        const background = canvas.getObjects('image').find(obj => obj.isBackground);
+        if (background) background.sendToBack();
+        canvas.renderAll();
+    }
 });
 
 // canvas selection events
@@ -161,7 +189,9 @@ function updateTextControls(obj) {
 // Live Updates
 textInput.addEventListener('input', (e) => {
     if (selectedObject) {
-        selectedObject.set('text', e.target.value);
+        const val = e.target.value.toUpperCase();
+        textInput.value = val;
+        selectedObject.set('text', val);
         canvas.renderAll();
     }
 });
