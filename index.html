@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThumbnailPro | Premium Generator</title>
     <meta name="description" content="Create stunning thumbnails for YouTube, social media, and more. Upload images, add text, and download your high-quality thumbnail.">
-    <link rel="stylesheet" href="style.css?v=1.13">
+    <link rel="stylesheet" href="style.css?v=1.14">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
@@ -116,20 +116,30 @@
 
                     <div class="grid-2">
                         <div class="input-wrapper">
-                            <label>Stroke</label>
+                            <label>Stroke Width</label>
                             <input type="number" id="stroke-width" value="0" min="0" max="100">
                         </div>
                         <div class="input-wrapper">
-                            <label>Color</label>
+                            <label>Stroke Color</label>
                             <div class="color-picker-wrapper">
-                                <input type="color" id="text-color" value="#ffffff">
+                                <input type="color" id="stroke-color" value="#000000">
                             </div>
                         </div>
                     </div>
 
                     <div class="grid-2">
-                        <button id="bring-forward" class="btn-ghost">Forward</button>
-                        <button id="send-backwards" class="btn-ghost">Backward</button>
+                        <div class="input-wrapper">
+                            <label>Text Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="text-color" value="#ffffff">
+                            </div>
+                        </div>
+                        <div class="input-wrapper" style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
+                             <div class="grid-2" style="width: 100%;">
+                                <button id="bring-forward" class="btn-ghost" style="padding: 0.5rem; font-size: 0.6rem;">Front</button>
+                                <button id="send-backwards" class="btn-ghost" style="padding: 0.5rem; font-size: 0.6rem;">Back</button>
+                             </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -152,6 +162,6 @@
         </main>
     </div>
 
-    <script src="main.js?v=1.6"></script>
+    <script src="main.js?v=1.7"></script>
 </body>
 </html>

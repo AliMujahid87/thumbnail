@@ -1,7 +1,7 @@
 // Ensure everything runs after load
 window.onload = function() {
     const canvasPreset = document.getElementById('canvas-preset');
-    const initialDims = canvasPreset.value.split('x').map(Number);
+    const initialDims = canvasPreset.value ? canvasPreset.value.split('x').map(Number) : [1080, 1920];
     
     const canvas = new fabric.Canvas('main-canvas', {
         width: initialDims[0],
@@ -13,39 +13,43 @@ window.onload = function() {
     canvas.setWidth(initialDims[0]);
     canvas.setHeight(initialDims[1]);
 
+    // Helper to safely get elements
+    const get = (id) => document.getElementById(id);
+
     // UI Elements
-    const imageUpload = document.getElementById('image-upload');
-    const dropZone = document.getElementById('drop-zone');
-    const addFadeBtn = document.getElementById('add-fade');
-    const shadowEditControls = document.getElementById('shadow-edit-controls');
-    const shadowHeightSlider = document.getElementById('shadow-height-slider');
-    const shadowOpacitySlider = document.getElementById('shadow-opacity-slider');
-    
-    const addTextBtn = document.getElementById('add-text');
-    const addHighlightBtn = document.getElementById('add-highlight-text');
-    const btnUppercase = document.getElementById('btn-uppercase');
-    const btnLowercase = document.getElementById('btn-lowercase');
-    const bringForwardBtn = document.getElementById('bring-forward');
-    const sendBackwardsBtn = document.getElementById('send-backwards');
-    const textControls = document.getElementById('text-edit-controls');
-    const textInput = document.getElementById('text-input');
-    const fontSizeInput = document.getElementById('font-size');
-    const lineHeightInput = document.getElementById('line-height');
-    const textColorInput = document.getElementById('text-color');
-    const fontFamilyInput = document.getElementById('font-family');
-    const fontWeightInput = document.getElementById('font-weight');
-    const charSpacingInput = document.getElementById('char-spacing');
-    const shadowBlurInput = document.getElementById('shadow-blur');
-    const strokeWidthInput = document.getElementById('stroke-width');
-    const strokeColorInput = document.getElementById('stroke-color');
-    const downloadBtn = document.getElementById('download-btn');
-    const resetBtn = document.getElementById('reset-btn');
+    const elements = {
+        imageUpload: get('image-upload'),
+        dropZone: get('drop-zone'),
+        addFadeBtn: get('add-fade'),
+        shadowEditControls: get('shadow-edit-controls'),
+        shadowHeightSlider: get('shadow-height-slider'),
+        shadowOpacitySlider: get('shadow-opacity-slider'),
+        addTextBtn: get('add-text'),
+        addHighlightBtn: get('add-highlight-text'),
+        btnUppercase: get('btn-uppercase'),
+        btnLowercase: get('btn-lowercase'),
+        bringForwardBtn: get('bring-forward'),
+        sendBackwardsBtn: get('send-backwards'),
+        textControls: get('text-edit-controls'),
+        textInput: get('text-input'),
+        fontSizeInput: get('font-size'),
+        lineHeightInput: get('line-height'),
+        textColorInput: get('text-color'),
+        fontFamilyInput: get('font-family'),
+        fontWeightInput: get('font-weight'),
+        charSpacingInput: get('char-spacing'),
+        shadowBlurInput: get('shadow-blur'),
+        strokeWidthInput: get('stroke-width'),
+        strokeColorInput: get('stroke-color'),
+        downloadBtn: get('download-btn'),
+        resetBtn: get('reset-btn')
+    };
 
     let selectedObject = null;
 
     function resizeCanvasDisplay() {
         const wrapper = document.querySelector('.canvas-wrapper');
-        const container = document.getElementById('scaling-container');
+        const container = get('scaling-container');
         if (!wrapper || !container) return;
 
         wrapper.style.width = canvas.width + 'px';
@@ -65,192 +69,135 @@ window.onload = function() {
     setTimeout(resizeCanvasDisplay, 300);
 
     // Background Image Upload
-    imageUpload.addEventListener('change', handleImageUpload);
-
-    function handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(f) {
-            const data = f.target.result;
-            fabric.Image.fromURL(data, function(img) {
-                const objects = canvas.getObjects();
-                objects.forEach(obj => {
-                    if (obj.isBackground) canvas.remove(obj);
+    if (elements.imageUpload) {
+        elements.imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(f) {
+                fabric.Image.fromURL(f.target.result, (img) => {
+                    canvas.getObjects().forEach(obj => { if (obj.isBackground) canvas.remove(obj); });
+                    img.set({ originX: 'left', originY: 'top', isBackground: true, selectable: false, evented: false });
+                    img.scale(Math.max(canvas.width / img.width, canvas.height / img.height)).center();
+                    canvas.insertAt(img, 0).renderAll();
                 });
-
-                img.set({
-                    originX: 'left',
-                    originY: 'top',
-                    isBackground: true,
-                    selectable: false,
-                    evented: false
-                });
-                
-                const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-                img.scale(scale);
-                img.center();
-                
-                canvas.insertAt(img, 0);
-                canvas.renderAll();
-            });
-        };
-        reader.readAsDataURL(file);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     // Shadow Fade Logic
     function updateFadeShadow() {
         const fadeShadow = canvas.getObjects().find(obj => obj.isFadeShadow);
-        if (!fadeShadow) return;
+        if (!fadeShadow || !elements.shadowHeightSlider || !elements.shadowOpacitySlider) return;
 
-        const heightPercent = parseInt(shadowHeightSlider.value) / 100;
-        const opacityPercent = parseInt(shadowOpacitySlider.value) / 100;
-        const fadeHeight = canvas.height * heightPercent;
+        const h = parseInt(elements.shadowHeightSlider.value) / 100;
+        const o = parseInt(elements.shadowOpacitySlider.value) / 100;
+        const fadeH = canvas.height * h;
 
         fadeShadow.set({
-            top: canvas.height - fadeHeight,
+            top: canvas.height - fadeH,
             width: canvas.width,
-            height: fadeHeight,
+            height: fadeH,
             fill: new fabric.Gradient({
                 type: 'linear',
                 gradientUnits: 'pixels',
-                coords: { x1: 0, y1: 0, x2: 0, y2: fadeHeight },
+                coords: { x1: 0, y1: 0, x2: 0, y2: fadeH },
                 colorStops: [
                     { offset: 0, color: 'rgba(0,0,0,0)' },
-                    { offset: 0.5, color: `rgba(0,0,0,${0.6 * opacityPercent})` },
-                    { offset: 1, color: `rgba(0,0,0,${opacityPercent})` }
+                    { offset: 0.5, color: `rgba(0,0,0,${0.6 * o})` },
+                    { offset: 1, color: `rgba(0,0,0,${o})` }
                 ]
             })
         });
         canvas.renderAll();
     }
 
-    addFadeBtn.addEventListener('click', () => {
-        const objects = canvas.getObjects();
-        let fadeShadow = objects.find(obj => obj.isFadeShadow);
-        
-        if (fadeShadow) {
-            shadowEditControls.classList.remove('hidden');
-            return;
-        }
+    if (elements.addFadeBtn) {
+        elements.addFadeBtn.addEventListener('click', () => {
+            let fade = canvas.getObjects().find(obj => obj.isFadeShadow);
+            if (fade) { elements.shadowEditControls?.classList.remove('hidden'); return; }
 
-        const heightPercent = parseInt(shadowHeightSlider.value) / 100;
-        const opacityPercent = parseInt(shadowOpacitySlider.value) / 100;
-        const fadeHeight = canvas.height * heightPercent;
+            const h = parseInt(elements.shadowHeightSlider?.value || 45) / 100;
+            const o = parseInt(elements.shadowOpacitySlider?.value || 85) / 100;
+            const fadeH = canvas.height * h;
 
-        fadeShadow = new fabric.Rect({
-            left: 0,
-            top: canvas.height - fadeHeight,
-            width: canvas.width,
-            height: fadeHeight,
-            selectable: false,
-            evented: false,
-            isFadeShadow: true,
-            fill: new fabric.Gradient({
-                type: 'linear',
-                gradientUnits: 'pixels',
-                coords: { x1: 0, y1: 0, x2: 0, y2: fadeHeight },
-                colorStops: [
-                    { offset: 0, color: 'rgba(0,0,0,0)' },
-                    { offset: 0.5, color: `rgba(0,0,0,${0.6 * opacityPercent})` },
-                    { offset: 1, color: `rgba(0,0,0,${opacityPercent})` }
-                ]
-            })
+            fade = new fabric.Rect({
+                left: 0, top: canvas.height - fadeH, width: canvas.width, height: fadeH,
+                selectable: false, evented: false, isFadeShadow: true,
+                fill: new fabric.Gradient({
+                    type: 'linear', gradientUnits: 'pixels',
+                    coords: { x1: 0, y1: 0, x2: 0, y2: fadeH },
+                    colorStops: [
+                        { offset: 0, color: 'rgba(0,0,0,0)' },
+                        { offset: 0.5, color: `rgba(0,0,0,${0.6 * o})` },
+                        { offset: 1, color: `rgba(0,0,0,${o})` }
+                    ]
+                })
+            });
+
+            canvas.add(fade);
+            const bg = canvas.getObjects().find(obj => obj.isBackground);
+            if (bg) fade.moveTo(canvas.getObjects().indexOf(bg) + 1); else fade.sendToBack();
+            elements.shadowEditControls?.classList.remove('hidden');
+            canvas.renderAll();
         });
+    }
 
-        canvas.add(fadeShadow);
-        const background = canvas.getObjects().find(obj => obj.isBackground);
-        if (background) {
-            fadeShadow.moveTo(canvas.getObjects().indexOf(background) + 1);
-        } else {
-            fadeShadow.sendToBack();
-        }
-        
-        shadowEditControls.classList.remove('hidden');
-        canvas.renderAll();
-    });
-
-    shadowHeightSlider.addEventListener('input', updateFadeShadow);
-    shadowOpacitySlider.addEventListener('input', updateFadeShadow);
+    if (elements.shadowHeightSlider) elements.shadowHeightSlider.addEventListener('input', updateFadeShadow);
+    if (elements.shadowOpacitySlider) elements.shadowOpacitySlider.addEventListener('input', updateFadeShadow);
 
     // Add Text
     function createStyledText(content, color) {
         return new fabric.IText(content, {
-            left: canvas.width / 2,
-            top: canvas.height / 2,
-            fontFamily: 'Poppins',
-            fontSize: 160,
-            fill: color || '#ffffff',
-            fontWeight: '900',
-            originX: 'center',
-            originY: 'center',
-            textAlign: 'center',
-            charSpacing: -40,
-            lineHeight: 0.9,
-            cornerColor: '#3b82f6',
-            cornerSize: 12,
-            transparentCorners: false,
-            shadow: new fabric.Shadow({
-                color: 'rgba(0,0,0,0.6)',
-                blur: 15,
-                offsetX: 5,
-                offsetY: 5
-            })
+            left: canvas.width / 2, top: canvas.height / 2,
+            fontFamily: 'Poppins', fontSize: 160, fill: color || '#ffffff', fontWeight: '900',
+            originX: 'center', originY: 'center', textAlign: 'center', charSpacing: -40, lineHeight: 0.9,
+            cornerColor: '#3b82f6', cornerSize: 12, transparentCorners: false,
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 15, offsetX: 5, offsetY: 5 })
         });
     }
 
-    addTextBtn.addEventListener('click', () => {
+    elements.addTextBtn?.addEventListener('click', () => {
         const text = createStyledText('TEXT HERE', '#ffffff');
-        canvas.add(text);
-        canvas.setActiveObject(text);
-        canvas.renderAll();
+        canvas.add(text).setActiveObject(text).renderAll();
     });
 
-    addHighlightBtn.addEventListener('click', () => {
+    elements.addHighlightBtn?.addEventListener('click', () => {
         const text = createStyledText('HIGHLIGHT', '#9b1b30');
-        canvas.add(text);
-        canvas.setActiveObject(text);
-        canvas.renderAll();
+        canvas.add(text).setActiveObject(text).renderAll();
     });
 
     // Case Controls
-    btnUppercase.addEventListener('click', () => {
-        if (selectedObject && selectedObject.text) {
-            const newText = selectedObject.text.toUpperCase();
-            selectedObject.set('text', newText);
-            textInput.value = newText;
+    elements.btnUppercase?.addEventListener('click', () => {
+        if (selectedObject?.text) {
+            selectedObject.set('text', selectedObject.text.toUpperCase());
+            if (elements.textInput) elements.textInput.value = selectedObject.text;
             canvas.renderAll();
         }
     });
 
-    btnLowercase.addEventListener('click', () => {
-        if (selectedObject && selectedObject.text) {
-            const newText = selectedObject.text.toLowerCase();
-            selectedObject.set('text', newText);
-            textInput.value = newText;
+    elements.btnLowercase?.addEventListener('click', () => {
+        if (selectedObject?.text) {
+            selectedObject.set('text', selectedObject.text.toLowerCase());
+            if (elements.textInput) elements.textInput.value = selectedObject.text;
             canvas.renderAll();
         }
     });
 
     // Layering
-    bringForwardBtn.addEventListener('click', () => {
-        const activeObject = canvas.getActiveObject();
-        if (activeObject) {
-            canvas.bringToFront(activeObject);
-            canvas.renderAll();
-        }
+    elements.bringForwardBtn?.addEventListener('click', () => {
+        const obj = canvas.getActiveObject();
+        if (obj) canvas.bringToFront(obj).renderAll();
     });
 
-    sendBackwardsBtn.addEventListener('click', () => {
-        const activeObject = canvas.getActiveObject();
-        if (activeObject) {
-            const background = canvas.getObjects().find(obj => obj.isBackground);
-            const fadeShadow = canvas.getObjects().find(obj => obj.isFadeShadow);
-            const minIndex = (fadeShadow ? canvas.getObjects().indexOf(fadeShadow) : (background ? canvas.getObjects().indexOf(background) : -1)) + 1;
-            
-            canvas.moveTo(activeObject, Math.max(minIndex, canvas.getObjects().indexOf(activeObject) - 1));
-            canvas.renderAll();
+    elements.sendBackwardsBtn?.addEventListener('click', () => {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+            const bg = canvas.getObjects().find(o => o.isBackground);
+            const fade = canvas.getObjects().find(o => o.isFadeShadow);
+            const min = (fade ? canvas.getObjects().indexOf(fade) : (bg ? canvas.getObjects().indexOf(bg) : -1)) + 1;
+            canvas.moveTo(obj, Math.max(min, canvas.getObjects().indexOf(obj) - 1)).renderAll();
         }
     });
 
@@ -258,125 +205,97 @@ window.onload = function() {
     canvas.on('selection:created', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:updated', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:cleared', () => {
-        textControls.classList.add('hidden');
+        elements.textControls?.classList.add('hidden');
         selectedObject = null;
     });
 
     canvas.on('text:changed', (e) => {
-        if (e.target === selectedObject) {
-            textInput.value = e.target.text;
+        if (e.target === selectedObject && elements.textInput) {
+            elements.textInput.value = e.target.text;
         }
     });
 
     function updateTextControls(obj) {
         if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
             selectedObject = obj;
-            textControls.classList.remove('hidden');
-            textInput.value = obj.text || '';
-            fontSizeInput.value = obj.fontSize || 160;
-            lineHeightInput.value = obj.lineHeight || 0.9;
-            textColorInput.value = obj.fill || '#ffffff';
-            fontFamilyInput.value = obj.fontFamily || 'Poppins';
-            fontWeightInput.value = obj.fontWeight || '900';
-            charSpacingInput.value = obj.charSpacing || -40;
-            shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
-            strokeWidthInput.value = obj.strokeWidth || 0;
-            strokeColorInput.value = obj.stroke || '#000000';
+            elements.textControls?.classList.remove('hidden');
+            if (elements.textInput) elements.textInput.value = obj.text || '';
+            if (elements.fontSizeInput) elements.fontSizeInput.value = obj.fontSize || 160;
+            if (elements.lineHeightInput) elements.lineHeightInput.value = obj.lineHeight || 0.9;
+            if (elements.textColorInput) elements.textColorInput.value = obj.fill || '#ffffff';
+            if (elements.fontFamilyInput) elements.fontFamilyInput.value = obj.fontFamily || 'Poppins';
+            if (elements.fontWeightInput) elements.fontWeightInput.value = obj.fontWeight || '900';
+            if (elements.charSpacingInput) elements.charSpacingInput.value = obj.charSpacing || -40;
+            if (elements.shadowBlurInput) elements.shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
+            if (elements.strokeWidthInput) elements.strokeWidthInput.value = obj.strokeWidth || 0;
+            if (elements.strokeColorInput) elements.strokeColorInput.value = obj.stroke || '#000000';
         } else {
-            textControls.classList.add('hidden');
+            elements.textControls?.classList.add('hidden');
         }
     }
 
-    textInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('text', e.target.value);
-            canvas.renderAll();
-        }
+    elements.textInput?.addEventListener('input', (e) => {
+        if (selectedObject) { selectedObject.set('text', e.target.value); canvas.renderAll(); }
     });
 
-    const inputs = [
-        [fontSizeInput, 'fontSize', parseInt],
-        [lineHeightInput, 'lineHeight', parseFloat],
-        [textColorInput, 'fill', String],
-        [fontFamilyInput, 'fontFamily', String],
-        [fontWeightInput, 'fontWeight', String],
-        [charSpacingInput, 'charSpacing', parseInt],
-        [strokeWidthInput, 'strokeWidth', parseInt],
-        [strokeColorInput, 'stroke', String]
+    const propInputs = [
+        ['fontSizeInput', 'fontSize', parseInt],
+        ['lineHeightInput', 'lineHeight', parseFloat],
+        ['textColorInput', 'fill', String],
+        ['fontFamilyInput', 'fontFamily', String],
+        ['fontWeightInput', 'fontWeight', String],
+        ['charSpacingInput', 'charSpacing', parseInt],
+        ['strokeWidthInput', 'strokeWidth', parseInt],
+        ['strokeColorInput', 'stroke', String]
     ];
 
-    inputs.forEach(([input, prop, parser]) => {
-        input.addEventListener('input', () => {
-            if (selectedObject) {
-                selectedObject.set(prop, parser(input.value));
-                canvas.renderAll();
-            }
-        });
-        if (input.tagName === 'SELECT') {
-            input.addEventListener('change', () => {
-                if (selectedObject) {
-                    selectedObject.set(prop, parser(input.value));
-                    canvas.renderAll();
-                }
+    propInputs.forEach(([elName, prop, parser]) => {
+        const el = elements[elName];
+        if (el) {
+            const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
+            el.addEventListener(eventType, () => {
+                if (selectedObject) { selectedObject.set(prop, parser(el.value)); canvas.renderAll(); }
             });
         }
     });
 
-    shadowBlurInput.addEventListener('input', () => {
+    elements.shadowBlurInput?.addEventListener('input', () => {
         if (selectedObject) {
-            if (!selectedObject.shadow) {
-                selectedObject.shadow = new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', offsetX: 5, offsetY: 5 });
-            }
-            selectedObject.shadow.blur = parseInt(shadowBlurInput.value) || 0;
+            if (!selectedObject.shadow) selectedObject.shadow = new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', offsetX: 5, offsetY: 5 });
+            selectedObject.shadow.blur = parseInt(elements.shadowBlurInput.value) || 0;
             canvas.renderAll();
         }
     });
 
     canvasPreset.addEventListener('change', (e) => {
-        const [width, height] = e.target.value.split('x').map(Number);
-        canvas.setDimensions({ width, height });
+        const [w, h] = e.target.value.split('x').map(Number);
+        canvas.setDimensions({ width: w, height: h });
         resizeCanvasDisplay();
-        
-        const background = canvas.getObjects().find(obj => obj.isBackground);
-        if (background) {
-            const scale = Math.max(canvas.width / background.width, canvas.height / background.height);
-            background.scale(scale);
-            background.center();
-        }
-
+        const bg = canvas.getObjects().find(o => o.isBackground);
+        if (bg) bg.scale(Math.max(canvas.width / bg.width, canvas.height / bg.height)).center();
         updateFadeShadow();
         canvas.renderAll();
     });
 
-    downloadBtn.addEventListener('click', () => {
-        const dataURL = canvas.toDataURL({
-            format: 'png',
-            quality: 1,
-            multiplier: 2
-        });
+    elements.downloadBtn?.addEventListener('click', () => {
         const link = document.createElement('a');
         link.download = `thumbnail-${Date.now()}.png`;
-        link.href = dataURL;
+        link.href = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
         link.click();
     });
 
-    resetBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear your work?')) {
-            canvas.clear();
-            canvas.setBackgroundColor('#000000', canvas.renderAll.bind(canvas));
-            textControls.classList.add('hidden');
-            shadowEditControls.classList.add('hidden');
+    elements.resetBtn?.addEventListener('click', () => {
+        if (confirm('Clear work?')) {
+            canvas.clear().setBackgroundColor('#000000', canvas.renderAll.bind(canvas));
+            elements.textControls?.classList.add('hidden');
+            elements.shadowEditControls?.classList.add('hidden');
         }
     });
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && !activeObject.isEditing) {
-                canvas.remove(activeObject);
-                canvas.discardActiveObject();
-                canvas.renderAll();
-            }
+            const obj = canvas.getActiveObject();
+            if (obj && !obj.isEditing) { canvas.remove(obj).discardActiveObject().renderAll(); }
         }
     });
 };
