@@ -1,8 +1,8 @@
 // Ensure everything runs after load
-window.onload = function() {
+window.onload = function () {
     const canvasPreset = document.getElementById('canvas-preset');
     const initialDims = (canvasPreset && canvasPreset.value) ? canvasPreset.value.split('x').map(Number) : [1080, 1920];
-    
+
     const canvas = new fabric.Canvas('main-canvas', {
         width: initialDims[0],
         height: initialDims[1],
@@ -55,7 +55,7 @@ window.onload = function() {
         wrapper.style.width = canvas.width + 'px';
         wrapper.style.height = canvas.height + 'px';
         wrapper.style.transform = 'none';
-        
+
         const availableWidth = container.clientWidth - 40;
         const availableHeight = container.clientHeight - 80;
         const scaleX = availableWidth / canvas.width;
@@ -74,7 +74,7 @@ window.onload = function() {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(f) {
+            reader.onload = function (f) {
                 fabric.Image.fromURL(f.target.result, (img) => {
                     canvas.getObjects().forEach(obj => { if (obj.isBackground) canvas.remove(obj); });
                     img.set({ originX: 'left', originY: 'top', isBackground: true, selectable: false, evented: false });
