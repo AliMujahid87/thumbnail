@@ -174,30 +174,31 @@ window.onload = function() {
 
     // Add Text
     function createStyledText(content, color) {
-        return new fabric.IText(content, {
+        const text = new fabric.IText(content, {
             left: canvas.width / 2,
             top: canvas.height / 2,
-            fontFamily: fontFamilyInput.value || 'Poppins',
-            fontSize: parseInt(fontSizeInput.value) || 160,
-            fill: color || textColorInput.value,
-            fontWeight: fontWeightInput.value || '900',
-            stroke: strokeColorInput.value || '#000000',
-            strokeWidth: parseInt(strokeWidthInput.value) || 0,
+            fontFamily: 'Poppins',
+            fontSize: 160,
+            fill: color || '#ffffff',
+            fontWeight: '900',
+            stroke: '#000000',
+            strokeWidth: 0,
             originX: 'center',
             originY: 'center',
             cornerColor: '#3b82f6',
             cornerSize: 12,
             transparentCorners: false,
             textAlign: 'center',
-            charSpacing: parseInt(charSpacingInput.value) || -40,
-            lineHeight: parseFloat(lineHeightInput.value) || 0.9,
+            charSpacing: -40,
+            lineHeight: 0.9,
             shadow: new fabric.Shadow({
                 color: 'rgba(0,0,0,0.6)',
-                blur: parseInt(shadowBlurInput.value) || 15,
+                blur: 15,
                 offsetX: 5,
                 offsetY: 5
             })
         });
+        return text;
     }
 
     addTextBtn.addEventListener('click', () => {
@@ -246,6 +247,12 @@ window.onload = function() {
     // Sync on-canvas editing with sidebar
     canvas.on('text:changed', (e) => {
         if (e.target === selectedObject) {
+            // Force uppercase if desired, or just sync
+            const newText = e.target.text.toUpperCase();
+            if (e.target.text !== newText) {
+                e.target.set('text', newText);
+                canvas.renderAll();
+            }
             textInput.value = e.target.text;
         }
     });
@@ -256,12 +263,13 @@ window.onload = function() {
         if (obj.type === 'i-text' || obj.type === 'text') {
             selectedObject = obj;
             textControls.classList.remove('hidden');
+            
+            // Update inputs without triggering loops
             textInput.value = obj.text || '';
             fontSizeInput.value = obj.fontSize || 160;
             lineHeightInput.value = obj.lineHeight || 0.9;
             textColorInput.value = obj.fill || '#ffffff';
             fontFamilyInput.value = obj.fontFamily || 'Poppins';
-            fontFamilyInput.value = obj.fontFamily === 'Montserrat' ? 'Montserrat' : (obj.fontFamily === 'Poppins' ? 'Poppins' : obj.fontFamily);
             fontWeightInput.value = obj.fontWeight || '900';
             charSpacingInput.value = obj.charSpacing || -40;
             shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
@@ -273,11 +281,16 @@ window.onload = function() {
         }
     }
 
-    // Live Updates
+    // Live Updates from Sidebar
     textInput.addEventListener('input', (e) => {
         if (selectedObject) {
+            const start = textInput.selectionStart;
+            const end = textInput.selectionEnd;
             const val = e.target.value.toUpperCase();
+            
             textInput.value = val;
+            textInput.setSelectionRange(start, end); // Keep cursor position
+            
             selectedObject.set('text', val);
             canvas.renderAll();
         }
