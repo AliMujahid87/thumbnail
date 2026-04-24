@@ -28,6 +28,7 @@ window.onload = function() {
     const textControls = document.getElementById('text-edit-controls');
     const textInput = document.getElementById('text-input');
     const fontSizeInput = document.getElementById('font-size');
+    const lineHeightInput = document.getElementById('line-height');
     const textColorInput = document.getElementById('text-color');
     const fontFamilyInput = document.getElementById('font-family');
     const fontWeightInput = document.getElementById('font-weight');
@@ -128,8 +129,6 @@ window.onload = function() {
         let fadeShadow = objects.find(obj => obj.isFadeShadow);
         
         if (fadeShadow) {
-            // If already exists, just show controls or toggle?
-            // Let's just make it visible
             shadowEditControls.classList.remove('hidden');
             return;
         }
@@ -173,26 +172,6 @@ window.onload = function() {
     shadowHeightSlider.addEventListener('input', updateFadeShadow);
     shadowOpacitySlider.addEventListener('input', updateFadeShadow);
 
-    // Drag & Drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragging');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragging');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragging');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            imageUpload.files = files;
-            handleImageUpload({ target: { files } });
-        }
-    });
-
     // Add Text
     function createStyledText(content, color) {
         return new fabric.IText(content, {
@@ -211,7 +190,7 @@ window.onload = function() {
             transparentCorners: false,
             textAlign: 'center',
             charSpacing: parseInt(charSpacingInput.value) || -20,
-            lineHeight: 1,
+            lineHeight: parseFloat(lineHeightInput.value) || 1,
             shadow: new fabric.Shadow({
                 color: 'rgba(0,0,0,0.6)',
                 blur: parseInt(shadowBlurInput.value) || 15,
@@ -270,6 +249,7 @@ window.onload = function() {
             textControls.classList.remove('hidden');
             textInput.value = obj.text;
             fontSizeInput.value = obj.fontSize;
+            lineHeightInput.value = obj.lineHeight;
             textColorInput.value = obj.fill;
             fontFamilyInput.value = obj.fontFamily;
             fontWeightInput.value = obj.fontWeight;
@@ -295,6 +275,13 @@ window.onload = function() {
     fontSizeInput.addEventListener('input', (e) => {
         if (selectedObject) {
             selectedObject.set('fontSize', parseInt(e.target.value));
+            canvas.renderAll();
+        }
+    });
+
+    lineHeightInput.addEventListener('input', (e) => {
+        if (selectedObject) {
+            selectedObject.set('lineHeight', parseFloat(e.target.value));
             canvas.renderAll();
         }
     });
