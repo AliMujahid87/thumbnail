@@ -23,6 +23,8 @@ window.onload = function() {
     
     const addTextBtn = document.getElementById('add-text');
     const addHighlightBtn = document.getElementById('add-highlight-text');
+    const btnUppercase = document.getElementById('btn-uppercase');
+    const btnLowercase = document.getElementById('btn-lowercase');
     const bringForwardBtn = document.getElementById('bring-forward');
     const sendBackwardsBtn = document.getElementById('send-backwards');
     const textControls = document.getElementById('text-edit-controls');
@@ -212,6 +214,25 @@ window.onload = function() {
         canvas.renderAll();
     });
 
+    // Case Controls
+    btnUppercase.addEventListener('click', () => {
+        if (selectedObject && selectedObject.text) {
+            const newText = selectedObject.text.toUpperCase();
+            selectedObject.set('text', newText);
+            textInput.value = newText;
+            canvas.renderAll();
+        }
+    });
+
+    btnLowercase.addEventListener('click', () => {
+        if (selectedObject && selectedObject.text) {
+            const newText = selectedObject.text.toLowerCase();
+            selectedObject.set('text', newText);
+            textInput.value = newText;
+            canvas.renderAll();
+        }
+    });
+
     // Layering
     bringForwardBtn.addEventListener('click', () => {
         const activeObject = canvas.getActiveObject();
@@ -241,7 +262,6 @@ window.onload = function() {
         selectedObject = null;
     });
 
-    // Sync on-canvas editing (Simpler)
     canvas.on('text:changed', (e) => {
         if (e.target === selectedObject) {
             textInput.value = e.target.text;
@@ -267,7 +287,6 @@ window.onload = function() {
         }
     }
 
-    // Sidebar text input (Simpler)
     textInput.addEventListener('input', (e) => {
         if (selectedObject) {
             selectedObject.set('text', e.target.value);
@@ -275,7 +294,6 @@ window.onload = function() {
         }
     });
 
-    // Other inputs
     const inputs = [
         [fontSizeInput, 'fontSize', parseInt],
         [lineHeightInput, 'lineHeight', parseFloat],
@@ -294,7 +312,6 @@ window.onload = function() {
                 canvas.renderAll();
             }
         });
-        // Also handle 'change' for selects
         if (input.tagName === 'SELECT') {
             input.addEventListener('change', () => {
                 if (selectedObject) {
