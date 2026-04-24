@@ -235,7 +235,7 @@ window.onload = function() {
         }
     });
 
-    // Selection Events
+    // Selection & Edit Events
     canvas.on('selection:created', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:updated', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:cleared', () => {
@@ -243,22 +243,32 @@ window.onload = function() {
         selectedObject = null;
     });
 
+    // Sync on-canvas editing with sidebar
+    canvas.on('text:changed', (e) => {
+        if (e.target === selectedObject) {
+            textInput.value = e.target.text;
+        }
+    });
+
     function updateTextControls(obj) {
-        if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        if (!obj) return;
+        
+        if (obj.type === 'i-text' || obj.type === 'text') {
             selectedObject = obj;
             textControls.classList.remove('hidden');
-            textInput.value = obj.text;
-            fontSizeInput.value = obj.fontSize;
-            lineHeightInput.value = obj.lineHeight;
-            textColorInput.value = obj.fill;
-            fontFamilyInput.value = obj.fontFamily;
-            fontWeightInput.value = obj.fontWeight;
-            charSpacingInput.value = obj.charSpacing;
-            shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 0;
-            strokeWidthInput.value = obj.strokeWidth;
-            strokeColorInput.value = obj.stroke;
+            textInput.value = obj.text || '';
+            fontSizeInput.value = obj.fontSize || 100;
+            lineHeightInput.value = obj.lineHeight || 1;
+            textColorInput.value = obj.fill || '#ffffff';
+            fontFamilyInput.value = obj.fontFamily || 'Poppins';
+            fontWeightInput.value = obj.fontWeight || 'bold';
+            charSpacingInput.value = obj.charSpacing || 0;
+            shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
+            strokeWidthInput.value = obj.strokeWidth || 0;
+            strokeColorInput.value = obj.stroke || '#000000';
         } else {
             textControls.classList.add('hidden');
+            selectedObject = null;
         }
     }
 
@@ -274,14 +284,14 @@ window.onload = function() {
 
     fontSizeInput.addEventListener('input', (e) => {
         if (selectedObject) {
-            selectedObject.set('fontSize', parseInt(e.target.value));
+            selectedObject.set('fontSize', parseInt(e.target.value) || 10);
             canvas.renderAll();
         }
     });
 
     lineHeightInput.addEventListener('input', (e) => {
         if (selectedObject) {
-            selectedObject.set('lineHeight', parseFloat(e.target.value));
+            selectedObject.set('lineHeight', parseFloat(e.target.value) || 1);
             canvas.renderAll();
         }
     });
@@ -309,7 +319,7 @@ window.onload = function() {
 
     charSpacingInput.addEventListener('input', (e) => {
         if (selectedObject) {
-            selectedObject.set('charSpacing', parseInt(e.target.value));
+            selectedObject.set('charSpacing', parseInt(e.target.value) || 0);
             canvas.renderAll();
         }
     });
@@ -319,14 +329,14 @@ window.onload = function() {
             if (!selectedObject.shadow) {
                 selectedObject.shadow = new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', offsetX: 5, offsetY: 5 });
             }
-            selectedObject.shadow.blur = parseInt(e.target.value);
+            selectedObject.shadow.blur = parseInt(e.target.value) || 0;
             canvas.renderAll();
         }
     });
 
     strokeWidthInput.addEventListener('input', (e) => {
         if (selectedObject) {
-            selectedObject.set('strokeWidth', parseInt(e.target.value));
+            selectedObject.set('strokeWidth', parseInt(e.target.value) || 0);
             canvas.renderAll();
         }
     });
