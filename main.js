@@ -1,7 +1,7 @@
 // Ensure everything runs after load
 window.onload = function() {
     const canvasPreset = document.getElementById('canvas-preset');
-    const initialDims = canvasPreset.value ? canvasPreset.value.split('x').map(Number) : [1080, 1920];
+    const initialDims = (canvasPreset && canvasPreset.value) ? canvasPreset.value.split('x').map(Number) : [1080, 1920];
     
     const canvas = new fabric.Canvas('main-canvas', {
         width: initialDims[0],
@@ -168,19 +168,25 @@ window.onload = function() {
         canvas.add(text).setActiveObject(text).renderAll();
     });
 
-    // Case Controls
+    // Case Controls (Enhanced)
     elements.btnUppercase?.addEventListener('click', () => {
-        if (selectedObject?.text) {
-            selectedObject.set('text', selectedObject.text.toUpperCase());
-            if (elements.textInput) elements.textInput.value = selectedObject.text;
+        const obj = canvas.getActiveObject();
+        if (obj && obj.text) {
+            if (obj.isEditing) obj.exitEditing();
+            const newText = obj.text.toUpperCase();
+            obj.set('text', newText);
+            if (elements.textInput) elements.textInput.value = newText;
             canvas.renderAll();
         }
     });
 
     elements.btnLowercase?.addEventListener('click', () => {
-        if (selectedObject?.text) {
-            selectedObject.set('text', selectedObject.text.toLowerCase());
-            if (elements.textInput) elements.textInput.value = selectedObject.text;
+        const obj = canvas.getActiveObject();
+        if (obj && obj.text) {
+            if (obj.isEditing) obj.exitEditing();
+            const newText = obj.text.toLowerCase();
+            obj.set('text', newText);
+            if (elements.textInput) elements.textInput.value = newText;
             canvas.renderAll();
         }
     });
@@ -267,15 +273,17 @@ window.onload = function() {
         }
     });
 
-    canvasPreset.addEventListener('change', (e) => {
-        const [w, h] = e.target.value.split('x').map(Number);
-        canvas.setDimensions({ width: w, height: h });
-        resizeCanvasDisplay();
-        const bg = canvas.getObjects().find(o => o.isBackground);
-        if (bg) bg.scale(Math.max(canvas.width / bg.width, canvas.height / bg.height)).center();
-        updateFadeShadow();
-        canvas.renderAll();
-    });
+    if (canvasPreset) {
+        canvasPreset.addEventListener('change', (e) => {
+            const [w, h] = e.target.value.split('x').map(Number);
+            canvas.setDimensions({ width: w, height: h });
+            resizeCanvasDisplay();
+            const bg = canvas.getObjects().find(o => o.isBackground);
+            if (bg) bg.scale(Math.max(canvas.width / bg.width, canvas.height / bg.height)).center();
+            updateFadeShadow();
+            canvas.renderAll();
+        });
+    }
 
     elements.downloadBtn?.addEventListener('click', () => {
         const link = document.createElement('a');
