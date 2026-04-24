@@ -174,23 +174,21 @@ window.onload = function() {
 
     // Add Text
     function createStyledText(content, color) {
-        const text = new fabric.IText(content, {
+        return new fabric.IText(content, {
             left: canvas.width / 2,
             top: canvas.height / 2,
             fontFamily: 'Poppins',
             fontSize: 160,
             fill: color || '#ffffff',
             fontWeight: '900',
-            stroke: '#000000',
-            strokeWidth: 0,
             originX: 'center',
             originY: 'center',
-            cornerColor: '#3b82f6',
-            cornerSize: 12,
-            transparentCorners: false,
             textAlign: 'center',
             charSpacing: -40,
             lineHeight: 0.9,
+            cornerColor: '#3b82f6',
+            cornerSize: 12,
+            transparentCorners: false,
             shadow: new fabric.Shadow({
                 color: 'rgba(0,0,0,0.6)',
                 blur: 15,
@@ -198,7 +196,6 @@ window.onload = function() {
                 offsetY: 5
             })
         });
-        return text;
     }
 
     addTextBtn.addEventListener('click', () => {
@@ -236,7 +233,7 @@ window.onload = function() {
         }
     });
 
-    // Selection & Edit Events
+    // Selection Events
     canvas.on('selection:created', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:updated', (e) => updateTextControls(e.selected[0]));
     canvas.on('selection:cleared', () => {
@@ -244,27 +241,17 @@ window.onload = function() {
         selectedObject = null;
     });
 
-    // Sync on-canvas editing with sidebar
+    // Sync on-canvas editing (Simpler)
     canvas.on('text:changed', (e) => {
         if (e.target === selectedObject) {
-            // Force uppercase if desired, or just sync
-            const newText = e.target.text.toUpperCase();
-            if (e.target.text !== newText) {
-                e.target.set('text', newText);
-                canvas.renderAll();
-            }
             textInput.value = e.target.text;
         }
     });
 
     function updateTextControls(obj) {
-        if (!obj) return;
-        
-        if (obj.type === 'i-text' || obj.type === 'text') {
+        if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
             selectedObject = obj;
             textControls.classList.remove('hidden');
-            
-            // Update inputs without triggering loops
             textInput.value = obj.text || '';
             fontSizeInput.value = obj.fontSize || 160;
             lineHeightInput.value = obj.lineHeight || 0.9;
@@ -277,87 +264,53 @@ window.onload = function() {
             strokeColorInput.value = obj.stroke || '#000000';
         } else {
             textControls.classList.add('hidden');
-            selectedObject = null;
         }
     }
 
-    // Live Updates from Sidebar
+    // Sidebar text input (Simpler)
     textInput.addEventListener('input', (e) => {
         if (selectedObject) {
-            const start = textInput.selectionStart;
-            const end = textInput.selectionEnd;
-            const val = e.target.value.toUpperCase();
-            
-            textInput.value = val;
-            textInput.setSelectionRange(start, end); // Keep cursor position
-            
-            selectedObject.set('text', val);
+            selectedObject.set('text', e.target.value);
             canvas.renderAll();
         }
     });
 
-    fontSizeInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('fontSize', parseInt(e.target.value) || 10);
-            canvas.renderAll();
+    // Other inputs
+    const inputs = [
+        [fontSizeInput, 'fontSize', parseInt],
+        [lineHeightInput, 'lineHeight', parseFloat],
+        [textColorInput, 'fill', String],
+        [fontFamilyInput, 'fontFamily', String],
+        [fontWeightInput, 'fontWeight', String],
+        [charSpacingInput, 'charSpacing', parseInt],
+        [strokeWidthInput, 'strokeWidth', parseInt],
+        [strokeColorInput, 'stroke', String]
+    ];
+
+    inputs.forEach(([input, prop, parser]) => {
+        input.addEventListener('input', () => {
+            if (selectedObject) {
+                selectedObject.set(prop, parser(input.value));
+                canvas.renderAll();
+            }
+        });
+        // Also handle 'change' for selects
+        if (input.tagName === 'SELECT') {
+            input.addEventListener('change', () => {
+                if (selectedObject) {
+                    selectedObject.set(prop, parser(input.value));
+                    canvas.renderAll();
+                }
+            });
         }
     });
 
-    lineHeightInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('lineHeight', parseFloat(e.target.value) || 1);
-            canvas.renderAll();
-        }
-    });
-
-    textColorInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('fill', e.target.value);
-            canvas.renderAll();
-        }
-    });
-
-    fontFamilyInput.addEventListener('change', (e) => {
-        if (selectedObject) {
-            selectedObject.set('fontFamily', e.target.value);
-            canvas.renderAll();
-        }
-    });
-
-    fontWeightInput.addEventListener('change', (e) => {
-        if (selectedObject) {
-            selectedObject.set('fontWeight', e.target.value);
-            canvas.renderAll();
-        }
-    });
-
-    charSpacingInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('charSpacing', parseInt(e.target.value) || 0);
-            canvas.renderAll();
-        }
-    });
-
-    shadowBlurInput.addEventListener('input', (e) => {
+    shadowBlurInput.addEventListener('input', () => {
         if (selectedObject) {
             if (!selectedObject.shadow) {
                 selectedObject.shadow = new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', offsetX: 5, offsetY: 5 });
             }
-            selectedObject.shadow.blur = parseInt(e.target.value) || 0;
-            canvas.renderAll();
-        }
-    });
-
-    strokeWidthInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('strokeWidth', parseInt(e.target.value) || 0);
-            canvas.renderAll();
-        }
-    });
-
-    strokeColorInput.addEventListener('input', (e) => {
-        if (selectedObject) {
-            selectedObject.set('stroke', e.target.value);
+            selectedObject.shadow.blur = parseInt(shadowBlurInput.value) || 0;
             canvas.renderAll();
         }
     });
