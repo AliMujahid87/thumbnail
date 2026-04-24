@@ -222,21 +222,26 @@ window.onload = function () {
     });
 
     function updateTextControls(obj) {
-        if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
-            selectedObject = obj;
-            elements.textControls?.classList.remove('hidden');
-            if (elements.textInput) elements.textInput.value = obj.text || '';
-            if (elements.fontSizeInput) elements.fontSizeInput.value = obj.fontSize || 160;
-            if (elements.lineHeightInput) elements.lineHeightInput.value = obj.lineHeight || 0.9;
-            if (elements.textColorInput) elements.textColorInput.value = obj.fill || '#ffffff';
-            if (elements.fontFamilyInput) elements.fontFamilyInput.value = obj.fontFamily || 'Poppins';
-            if (elements.fontWeightInput) elements.fontWeightInput.value = obj.fontWeight || '900';
-            if (elements.charSpacingInput) elements.charSpacingInput.value = obj.charSpacing || -40;
-            if (elements.shadowBlurInput) elements.shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
-            if (elements.strokeWidthInput) elements.strokeWidthInput.value = obj.strokeWidth || 0;
-            if (elements.strokeColorInput) elements.strokeColorInput.value = obj.stroke || '#000000';
-        } else {
-            elements.textControls?.classList.add('hidden');
+        try {
+            if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+                selectedObject = obj;
+                elements.textControls?.classList.remove('hidden');
+                if (elements.textInput) elements.textInput.value = obj.text || '';
+                if (elements.fontSizeInput) elements.fontSizeInput.value = obj.fontSize || 160;
+                if (elements.lineHeightInput) elements.lineHeightInput.value = obj.lineHeight || 0.9;
+                if (elements.textColorInput) elements.textColorInput.value = obj.fill || '#ffffff';
+                if (elements.fontFamilyInput) elements.fontFamilyInput.value = obj.fontFamily || 'Poppins';
+                if (elements.fontWeightInput) elements.fontWeightInput.value = obj.fontWeight || '900';
+                if (elements.charSpacingInput) elements.charSpacingInput.value = obj.charSpacing || -40;
+                if (elements.shadowBlurInput) elements.shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
+                if (elements.strokeWidthInput) elements.strokeWidthInput.value = obj.strokeWidth || 0;
+                if (elements.strokeColorInput) elements.strokeColorInput.value = obj.stroke || '#000000';
+            } else {
+                elements.textControls?.classList.add('hidden');
+                selectedObject = null;
+            }
+        } catch (err) {
+            console.error("Error updating text controls:", err);
         }
     }
 
@@ -300,10 +305,33 @@ window.onload = function () {
         }
     });
 
+    // Global Key Listeners
     window.addEventListener('keydown', (e) => {
+        // Ignore if typing in an input or textarea
+        const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable;
+        
         if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (isInput) return; // Let the input handle it naturally
+
             const obj = canvas.getActiveObject();
-            if (obj && !obj.isEditing) { canvas.remove(obj).discardActiveObject().renderAll(); }
+            if (obj && !obj.isEditing) {
+                // Prevent browser "Back" navigation and remove object
+                e.preventDefault();
+                canvas.remove(obj).discardActiveObject().renderAll();
+            } else if (e.key === 'Backspace') {
+                // Always prevent Backspace from navigating back if not in an input
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Prevent unintended refreshes on double click (common in some browser/environments)
+    window.addEventListener('dblclick', (e) => {
+        if (e.target.tagName === 'CANVAS' || e.target.closest('.canvas-wrapper')) {
+            // Fabric handles its own dblclick for IText, but we want to prevent 
+            // the browser from doing anything else (like selecting the whole page)
+            // which can sometimes trigger unintended reloads.
+            // e.preventDefault(); // Uncomment if refresh persists, but Fabric might need it.
         }
     });
 };
