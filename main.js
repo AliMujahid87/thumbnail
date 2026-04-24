@@ -178,9 +178,9 @@ window.onload = function() {
             left: canvas.width / 2,
             top: canvas.height / 2,
             fontFamily: fontFamilyInput.value || 'Poppins',
-            fontSize: parseInt(fontSizeInput.value) || 100,
+            fontSize: parseInt(fontSizeInput.value) || 160,
             fill: color || textColorInput.value,
-            fontWeight: fontWeightInput.value || 'bold',
+            fontWeight: fontWeightInput.value || '900',
             stroke: strokeColorInput.value || '#000000',
             strokeWidth: parseInt(strokeWidthInput.value) || 0,
             originX: 'center',
@@ -189,8 +189,8 @@ window.onload = function() {
             cornerSize: 12,
             transparentCorners: false,
             textAlign: 'center',
-            charSpacing: parseInt(charSpacingInput.value) || -20,
-            lineHeight: parseFloat(lineHeightInput.value) || 1,
+            charSpacing: parseInt(charSpacingInput.value) || -40,
+            lineHeight: parseFloat(lineHeightInput.value) || 0.9,
             shadow: new fabric.Shadow({
                 color: 'rgba(0,0,0,0.6)',
                 blur: parseInt(shadowBlurInput.value) || 15,
@@ -257,12 +257,13 @@ window.onload = function() {
             selectedObject = obj;
             textControls.classList.remove('hidden');
             textInput.value = obj.text || '';
-            fontSizeInput.value = obj.fontSize || 100;
-            lineHeightInput.value = obj.lineHeight || 1;
+            fontSizeInput.value = obj.fontSize || 160;
+            lineHeightInput.value = obj.lineHeight || 0.9;
             textColorInput.value = obj.fill || '#ffffff';
             fontFamilyInput.value = obj.fontFamily || 'Poppins';
-            fontWeightInput.value = obj.fontWeight || 'bold';
-            charSpacingInput.value = obj.charSpacing || 0;
+            fontFamilyInput.value = obj.fontFamily === 'Montserrat' ? 'Montserrat' : (obj.fontFamily === 'Poppins' ? 'Poppins' : obj.fontFamily);
+            fontWeightInput.value = obj.fontWeight || '900';
+            charSpacingInput.value = obj.charSpacing || -40;
             shadowBlurInput.value = obj.shadow ? obj.shadow.blur : 15;
             strokeWidthInput.value = obj.strokeWidth || 0;
             strokeColorInput.value = obj.stroke || '#000000';
